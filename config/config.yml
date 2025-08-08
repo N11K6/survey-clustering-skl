@@ -1,0 +1,15 @@
+data_source:
+    type: local
+    path: data/dataset.xlsx
+missing_data:
+    missing_data_strategy: ignore
+    fill_value: 0
+feature_selection:
+    variance_check: 0
+    variance_threshold: 0.05
+    correlation_check: 0
+    correlation_threshold: 0.8
+reduction:
+    pca_variance_threshold: 0.2
+clustering:
+    min_cluster_size: 40
