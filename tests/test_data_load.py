@@ -38,7 +38,10 @@ SAMPLE_CONFIG_LOCAL = {
 SAMPLE_CONFIG_S3 = {
     'data_source': {
         'type': 's3',
-        'path': 's3://my-test-bucket/path/to/data.xlsx'
+        'path': 's3://my-test-bucket/path/to/data.xlsx',
+        's3_address': 'http://127.0.0.1:9000',
+        's3_id': 'minioadmin',
+        's3_key': 'minioadmin'
     }
 }
 

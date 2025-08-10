@@ -29,9 +29,9 @@ def load_excel_from_config(config: dict) -> pd.DataFrame:
         # --- CONFIGURE FOR MINIO ---
         # MinIO is used for this Demo project, to showcase S3 compatibility
         # These are from the local MinIO setup
-        minio_endpoint = "http://127.0.0.1:9000" # MinIO server address
-        access_key = "minioadmin"    # Set in MinIO
-        secret_key = "minioadmin"    # Set in MinIO
+        minio_endpoint = source["s3_address"] # MinIO server address
+        access_key = source["s3_id"]    # Set in MinIO
+        secret_key = source["s3_key"]    # Set in MinIO
     
         # Create S3 client configured for MinIO
         s3 = boto3.client(

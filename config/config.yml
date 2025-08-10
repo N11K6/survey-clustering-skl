@@ -1,8 +1,11 @@
 data_source:
-    type: s3
-    path: s3://test-bucket/dataset.xlsx
+    type: "s3"
+    path: "s3://test-bucket/dataset.xlsx"
+    s3_address: "http://127.0.0.1:9000"
+    s3_id: "minioadmin"
+    s3_key: "minioadmin"
 missing_data:
-    missing_data_strategy: ignore
+    missing_data_strategy: "ignore"
     fill_value: 0
 feature_selection:
     variance_check: 0
