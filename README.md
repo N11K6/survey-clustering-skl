@@ -1,4 +1,5 @@
-# Survey Clustering Pipeline
+# Survey Clustering Pipeline 
+*WIP - ReadMe incomplete!!!*
 
 As part of a previous job interview, I was tasked to materialize a pipeline for ingesting, processing and performing clustering on a dataset that consisted of answers to questions in a survey. 
 I decided to keep the project and in the extra time I had since then, expand upon its structure and deployment.
