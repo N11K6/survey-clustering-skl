@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Fri Aug  8 14:03:13 2025
+Tests for the dimensionalit reduction script.
 
 @author: nk
 """
@@ -9,8 +9,6 @@ Created on Fri Aug  8 14:03:13 2025
 import numpy as np
 import pytest
 from sklearn.datasets import make_classification
-# Assuming 'perform_pca' is in a file named 'your_module.py'
-# Adjust the import according to your actual file structure
 from pipeline.dimensionality_reduction import perform_pca
 
 def create_test_dataset(n_samples=100, n_features=10, random_state=42):
@@ -136,6 +134,3 @@ def test_perform_pca_missing_config_key():
     with pytest.raises(KeyError):
         perform_pca(config, dataset)
 
-# Note: Testing the *exact* number of components chosen is tricky because it depends
-# on the specific dataset's variance distribution. These tests focus on shape,
-# type, and boundary conditions.

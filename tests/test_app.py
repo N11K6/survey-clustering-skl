@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Fri Aug  8 15:42:43 2025
+Tests for the app.py script (Running the pipeline via fastAPI)
 
 @author: nk
 """
-# tests/test_app.py
 from fastapi.testclient import TestClient
 from unittest.mock import patch
 import pandas as pd
@@ -14,16 +13,13 @@ import matplotlib
 import io
 import zipfile
 import json
-
-# Use the Agg backend for testing to avoid GUI issues
-matplotlib.use('Agg')
-
-from app import app  # Import your FastAPI app
+matplotlib.use('Agg') # Use the Agg backend for testing to avoid GUI issues
+from app import app  # Import FastAPI app
 
 client = TestClient(app)
 
 def test_cluster_endpoint_success():
-    # 1. Create mock data and plot (what your functions should return)
+    # 1. Create mock data and plot
     mock_dataset = pd.DataFrame({'col1': [1, 2], 'col2': [3, 4]}) # Example DataFrame
     mock_clustered_dataset = pd.DataFrame({'col1': [1, 2], 'col2': [3, 4], 'Cluster': [0, 1]}) # Example clustered DataFrame
     mock_metrics = {"silhouette_score": 0.5} # Example metrics
@@ -77,5 +73,4 @@ def test_cluster_endpoint_success():
                 metrics_data = json.load(metrics_file)
                 assert metrics_data == mock_metrics, f"Metrics mismatch: {metrics_data} != {mock_metrics}"
 
-        # Close the figure if you plan to create many in tests
         plt.close(fig)

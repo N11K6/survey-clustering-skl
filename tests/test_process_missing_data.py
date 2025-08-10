@@ -1,16 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Fri Aug  8 10:31:10 2025
+Tests for the missing data script.
 
 @author: nk
 """
 import pandas as pd
 import numpy as np
 import pytest
-# Import the functions from your script
-# Adjust the import path according to your project structure
-# Assuming the script is named data_handler.py
 from pipeline.process_missing_data import count_missing, ignore_missing, fill_missing, impute_missing, handle_missing
 
 # --- Fixtures for reusable test data (Integer-specific) ---
@@ -162,3 +159,4 @@ def test_handle_missing_invalid_strategy_int(sample_dataset_no_missing_int):
     invalid_config = {'missing_data': {'missing_data_strategy': 'invalid_strategy'}}
     with pytest.raises(ValueError, match=r"missing_strategy can only be: ignore, fill, impute"):
         handle_missing(invalid_config, sample_dataset_no_missing_int.copy())
+

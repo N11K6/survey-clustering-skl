@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Fri Aug  8 15:00:15 2025
+Tests for the clustering script.
 
 @author: nk
 """
@@ -10,7 +10,6 @@ from sklearn.datasets import make_blobs
 import matplotlib
 matplotlib.use('Agg') # Use non-interactive backend for testing
 import matplotlib.pyplot as plt
-# Assuming the functions are in 'analysis_pipeline.py'
 from pipeline.clustering import perform_HDBSCAN, visualize_clusters, perform_clustering
 
 # --- Test perform_HDBSCAN ---
@@ -147,6 +146,3 @@ def test_perform_clustering_all_noise():
     # Clean up plots
     plt.close('all')
 
-    # Reset stdout if captured
-    # sys.stdout = sys.__stdout__
-    # print(capturedOutput.getvalue()) # Print captured output for debugging

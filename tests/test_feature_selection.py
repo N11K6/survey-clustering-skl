@@ -1,18 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Fri Aug  8 11:50:38 2025
+Tests for the feature selection script.
 
 @author: nk
 """
-
-# test_varcorrcheck.py
 import pytest
 import pandas as pd
-
 from pipeline.feature_selection import perform_varcorrcheck
-
-# --- Helper Fixtures ---
 
 @pytest.fixture
 def base_config():
@@ -133,4 +128,5 @@ def test_both_checks_drop_features(base_config, sample_dataset):
     correlated_group = {'feature_a', 'feature_b', 'feature_c', 'feature_d'}
     remaining_correlated = correlated_group.intersection(result_dataset.columns)
     # Should not have all 4 remaining
-    assert len(remaining_correlated) < 4 
+    assert len(remaining_correlated) < 4
+
