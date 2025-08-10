@@ -1,6 +1,6 @@
 data_source:
-    type: "s3"
-    path: "s3://test-bucket/dataset.xlsx"
+    type: "local"
+    path: "data/dataset.xlsx"
     s3_address: "http://127.0.0.1:9000"
     s3_id: "minioadmin"
     s3_key: "minioadmin"
