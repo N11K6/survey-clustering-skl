@@ -14,7 +14,7 @@ import io
 import zipfile
 import json
 matplotlib.use('Agg') # Use the Agg backend for testing to avoid GUI issues
-from app import app  # Import FastAPI app
+from appmain import app  # Import FastAPI app
 
 client = TestClient(app)
 
@@ -40,8 +40,8 @@ def test_cluster_endpoint_success():
     """
 
     # 3. Use patch to replace the real functions with mocks
-    with patch('app.load_excel_from_config') as mock_load_excel, \
-         patch('app.run_pipeline') as mock_run_pipeline:
+    with patch('appmain.load_excel_from_config') as mock_load_excel, \
+         patch('appmain.run_pipeline') as mock_run_pipeline:
 
         # 4. Configure the mocks to return our predefined values
         mock_load_excel.return_value = mock_dataset

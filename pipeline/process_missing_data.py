@@ -9,8 +9,6 @@ Module for processing missing datapoints.
 import os
 import pandas as pd
 import numpy as np
-# explicitly require this experimental feature
-from sklearn.experimental import enable_iterative_imputer
 # now we can import normally from sklearn.impute
 from sklearn.impute import SimpleImputer
 
