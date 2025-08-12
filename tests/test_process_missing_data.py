@@ -9,6 +9,7 @@ import pandas as pd
 import numpy as np
 import pytest
 from pipeline.process_missing_data import count_missing, ignore_missing, fill_missing, impute_missing, handle_missing
+from unittest.mock import patch, MagicMock
 
 # --- Fixtures for reusable test data (Integer-specific) ---
 
@@ -49,6 +50,14 @@ def config_strategy_fill():
 @pytest.fixture
 def config_strategy_impute():
     return {'missing_data': {'missing_data_strategy': 'impute'}}
+
+@pytest.fixture
+def mock_keras_model():
+    """Fixture to create a mock Keras model."""
+    with patch('pipeline.process_missing_data.load_model') as mock_load:
+        mock_model = MagicMock()
+        mock_load.return_value = mock_model
+        yield mock_model # Provide the mock model instance to the test
 
 # --- Tests for count_missing ---
 
@@ -155,8 +164,29 @@ def test_handle_missing_impute_int(sample_dataset_with_missing_int, config_strat
     # Ensure no NaNs remain
     assert not result_df.isna().any().any()
 
+def test_handle_missing_synthesize(mock_keras_model): # Reuse mock_keras_model fixture
+    """Test handle_missing with 'synthesize' strategy."""
+    config = {'missing_data': {'missing_data_strategy': 'synthesize', 'model_name': 'synth_model'}}
+    df_input = pd.DataFrame({
+        'q1': [1, np.nan],
+        'core_re_a': [10, np.nan]
+    })
+
+    with patch('pipeline.process_missing_data.synthesize_missing') as mock_synthesize:
+        expected_result = pd.DataFrame({
+            'q1': [1, 99], # Example synthesized result
+            'core_re_a': [10, 999]
+        })
+        mock_synthesize.return_value = expected_result
+
+        result_df = handle_missing(config, df_input)
+
+        mock_synthesize.assert_called_once_with(config, df_input)
+        pd.testing.assert_frame_equal(result_df, expected_result)
+
+
 def test_handle_missing_invalid_strategy_int(sample_dataset_no_missing_int):
     invalid_config = {'missing_data': {'missing_data_strategy': 'invalid_strategy'}}
-    with pytest.raises(ValueError, match=r"missing_strategy can only be: ignore, fill, impute"):
+    with pytest.raises(ValueError, match=r"missing_strategy can only be: ignore, fill, impute, synthesize"):
         handle_missing(invalid_config, sample_dataset_no_missing_int.copy())
 

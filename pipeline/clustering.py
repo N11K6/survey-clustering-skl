@@ -17,6 +17,7 @@ def perform_HDBSCAN(config, data_reduced):
 
 def visualize_clusters(data_reduced, data_clustered):
     # Plot results in 2 Dimensions
+    plt.clf()
     plt.scatter(data_reduced[:, 0], data_reduced[:, 1], c=data_clustered, cmap='plasma', marker='o', s=50)
     plt.xlabel('Component 1')
     plt.ylabel('Component 2')
