@@ -14,7 +14,7 @@ missing_data:
     # fill value in case of 'fill'    
     fill_value: 0
     # name of model for data synthesis
-    model_name: "model_synthesize"
+    model_name: "model_synthesize2"
 feature_selection:
     # toggle variance check
     variance_check: 1
@@ -23,8 +23,12 @@ feature_selection:
     correlation_check: 1
     correlation_threshold: 0.8
 reduction:
+    # select approach for dimensionality reduction
+    approach: pca
     # set cummulative variance threshold for pca
     pca_variance_threshold: 0.25
+    # name of encoder model for dimensionality reduction
+    model_name: "model_reduce"
 clustering:
     # set minimum cluster size
     min_cluster_size: 40

@@ -20,7 +20,6 @@ client = TestClient(app)
 
 def test_cluster_endpoint_success():
     # 1. Create mock data and plot
-    mock_dataset = pd.DataFrame({'col1': [1, 2], 'col2': [3, 4]}) # Example DataFrame
     mock_clustered_dataset = pd.DataFrame({'col1': [1, 2], 'col2': [3, 4], 'Cluster': [0, 1]}) # Example clustered DataFrame
     mock_metrics = {"silhouette_score": 0.5} # Example metrics
 
@@ -40,11 +39,9 @@ def test_cluster_endpoint_success():
     """
 
     # 3. Use patch to replace the real functions with mocks
-    with patch('appmain.load_excel_from_config') as mock_load_excel, \
-         patch('appmain.run_pipeline') as mock_run_pipeline:
+    with patch('appmain.run_pipeline') as mock_run_pipeline:
 
         # 4. Configure the mocks to return our predefined values
-        mock_load_excel.return_value = mock_dataset
         mock_run_pipeline.return_value = (mock_clustered_dataset, mock_metrics, fig)
 
         # 5. Prepare the file upload (using the mock config content)

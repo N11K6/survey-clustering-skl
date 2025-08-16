@@ -5,132 +5,144 @@ Tests for the dimensionalit reduction script.
 
 @author: nk
 """
-
-import numpy as np
 import pytest
-from sklearn.datasets import make_classification
-from pipeline.dimensionality_reduction import perform_pca
+import numpy as np
+from unittest.mock import patch, MagicMock
+from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
+from pipeline.dimensionality_reduction import perform_pca, perform_encoding, reduce
 
-def create_test_dataset(n_samples=100, n_features=10, random_state=42):
-    """Helper function to create a reproducible test dataset."""
-    X, _ = make_classification(
-        n_samples=n_samples,
-        n_features=n_features,
-        n_informative=n_features // 2, # Half features are informative
-        n_redundant=n_features // 4,    # Some redundancy
-        n_clusters_per_class=1,
-        random_state=random_state
-    )
-    # Add some scaling differences to make standardization impactful
-    # (Optional, but good for realism)
-    # X = X * np.random.rand(1, n_features) * 10 + np.random.rand(1, n_features) * 5
-    return X
+# Sample config and dataset for testing
+@pytest.fixture
+def sample_config():
+    return {
+        'reduction': {
+            'approach': 'pca',
+            'pca_variance_threshold': 0.95,
+            'model_name': 'test_autoencoder'
+        },
+        'feature_selection': {
+            'variance_check': 0,
+            'correlation_check': 0
+        }
+    }
 
-def test_perform_pca_basic():
-    """Test basic functionality with a standard dataset and threshold."""
-    dataset = create_test_dataset(n_samples=100, n_features=20)
-    config = {'reduction': {'pca_variance_threshold': 0.95}} # Keep 95% variance
+@pytest.fixture
+def sample_dataset():
+    # 10 samples, 5 features
+    return np.random.rand(10, 5)
 
-    result = perform_pca(config, dataset)
+@pytest.fixture
+def pca_config():
+    return {
+        'reduction': {
+            'approach': 'pca',
+            'pca_variance_threshold': 0.95
+        },
+        'feature_selection': {}
+    }
 
-    # Assert the output is a NumPy array
-    assert isinstance(result, np.ndarray)
-    # Assert the number of samples remains the same
-    assert result.shape[0] == dataset.shape[0]
-    # Assert the number of components is less than or equal to original features
-    assert result.shape[1] <= dataset.shape[1]
-    # Assert that some reduction likely happened (might be flaky with high variance data)
-    # assert result.shape[1] < dataset.shape[1] # Uncomment if data guarantees reduction
+@pytest.fixture
+def encoder_config():
+    return {
+        'reduction': {
+            'approach': 'encoder',
+            'model_name': 'test_encoder'
+        },
+        'feature_selection': {
+            'variance_check': 0,
+            'correlation_check': 0
+        }
+    }
 
+# ========================
+# Test: perform_pca
+# ========================
+def test_perform_pca(pca_config, sample_dataset):
+    with patch('pipeline.dimensionality_reduction.PCA') as mock_pca:
+        # Simulate PCA behavior
+        mock_pca_instance = MagicMock()
+        mock_pca_instance.explained_variance_ratio_ = [0.6, 0.3, 0.05, 0.03, 0.02]  # Cumulative: 0.6, 0.9, 0.95, 0.98...
+        mock_pca_instance.fit_transform.return_value = sample_dataset[:, :3]  # Simulate 3 components
+        mock_pca.return_value = mock_pca_instance
 
-def test_perform_pca_high_threshold():
-    """Test with a high variance threshold (e.g., 99%)."""
-    dataset = create_test_dataset(n_samples=50, n_features=15)
-    config = {'reduction': {'pca_variance_threshold': 0.99}}
+        result = perform_pca(pca_config, sample_dataset)
 
-    result = perform_pca(config, dataset)
+        # Check that PCA was called with no initial n_components
+        mock_pca.assert_any_call()  # First PCA() call
+        assert mock_pca.call_count == 2  # One for full, one for optimal
+        assert result.shape[1] <= sample_dataset.shape[1]
+        assert result.shape[0] == sample_dataset.shape[0]
 
-    assert isinstance(result, np.ndarray)
-    assert result.shape[0] == dataset.shape[0]
-    assert result.shape[1] <= dataset.shape[1]
-    # With 99%, we expect fewer components than original features, usually.
-    # This might fail if data is already very low rank or threshold is met by all.
-    # assert result.shape[1] < dataset.shape[1] # Likely true, but test carefully
+def test_perform_pca_optimal_components(pca_config, sample_dataset):
+    # Real PCA run (no mocking) to test logic
+    result = perform_pca(pca_config, sample_dataset)
 
+    # Check explained variance accumulation
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(sample_dataset)
+    pca_full = PCA()
+    pca_full.fit(X_scaled)
+    cumvar = np.cumsum(pca_full.explained_variance_ratio_)
+    desired_var = pca_config['reduction']['pca_variance_threshold']
+    expected_n_components = np.count_nonzero(cumvar <= desired_var)  # <= gives indices below threshold
 
-def test_perform_pca_low_threshold():
-    """Test with a low variance threshold (e.g., 50%)."""
-    dataset = create_test_dataset(n_samples=80, n_features=12)
-    config = {'reduction': {'pca_variance_threshold': 0.50}}
+    assert result.shape[1] == expected_n_components
 
-    result = perform_pca(config, dataset)
+# ========================
+# Test: perform_encoding
+# ========================
+@patch('os.path.join', return_value='models/test_encoder.keras')
+@patch('pipeline.dimensionality_reduction.load_model')
+def test_perform_encoding(mock_load_model, mock_join, encoder_config, sample_dataset):
+    # Mock encoder model
+    mock_encoder = MagicMock()
+    mock_encoder.predict.return_value = sample_dataset[:, :3]  # Encoded to 3 features
+    mock_load_model.return_value = mock_encoder
 
-    assert isinstance(result, np.ndarray)
-    assert result.shape[0] == dataset.shape[0]
-    assert result.shape[1] <= dataset.shape[1]
-    # With 50%, we expect significant reduction if data has structure.
-    # assert result.shape[1] < dataset.shape[1] # Likely true
+    with patch('sklearn.preprocessing.StandardScaler.fit_transform') as mock_scaler:
+        mock_scaler.return_value = np.random.rand(*sample_dataset[:, :3].shape)
+        result = perform_encoding(encoder_config, sample_dataset)
 
+        mock_load_model.assert_called_once_with('models/test_encoder.keras')
+        mock_encoder.predict.assert_called_once_with(sample_dataset)
+        assert result.shape[0] == sample_dataset.shape[0]
+        assert result.shape[1] == 3  # Output matches encoder output
 
-def test_perform_pca_threshold_one():
-    """Test with variance threshold of 1.0 (should keep all components needed for 100% variance)."""
-    dataset = create_test_dataset(n_samples=30, n_features=8) # Small dataset
-    config = {'reduction': {'pca_variance_threshold': 1.0}}
+@patch('warnings.warn')
+def test_perform_encoding_with_variance_check_warning(mock_warn, encoder_config):
+    # Activate variance check
+    encoder_config['feature_selection']['variance_check'] = 1
+    sample_dataset = np.random.rand(10, 5)
 
-    result = perform_pca(config, dataset)
+    with patch('pipeline.dimensionality_reduction.load_model') as mock_load_model:
+        mock_encoder = MagicMock()
+        mock_encoder.predict.return_value = sample_dataset[:, :3]
+        mock_load_model.return_value = mock_encoder
 
-    assert isinstance(result, np.ndarray)
-    assert result.shape[0] == dataset.shape[0]
-    # With threshold 1.0, PCA might keep min(n_samples - 1, n_features) components
-    # or all if n_components='mle' allows it. The function logic might differ.
-    # Let's check it doesn't exceed theoretical max components.
-    max_components = min(dataset.shape[0] - 1, dataset.shape[1])
-    # The function uses 'mle' first, then refits. 'mle' can return fewer.
-    # The final number should be <= max_components and <= n_features
-    assert result.shape[1] <= dataset.shape[1]
-    assert result.shape[1] <= max_components + 1 # Small buffer, PCA details
+        with patch('pipeline.dimensionality_reduction.StandardScaler.fit_transform'):
+            perform_encoding(encoder_config, sample_dataset)
+            assert mock_warn.called
+            assert "incompatible input dimensions" in str(mock_warn.call_args)
 
+# ========================
+# Test: reduce
+# ========================
+def test_reduce_with_pca(pca_config, sample_dataset):
+    with patch('pipeline.dimensionality_reduction.perform_pca') as mock_pca:
+        mock_pca.return_value = sample_dataset[:, :3]
+        result = reduce(pca_config, sample_dataset)
+        mock_pca.assert_called_once_with(pca_config, sample_dataset)
+        assert result.shape[1] == 3
 
-def test_perform_pca_config_integration():
-    """Test that the function correctly uses the threshold from the config."""
-    dataset = create_test_dataset(n_samples=60, n_features=10)
-    threshold = 0.85
-    config = {'reduction': {'pca_variance_threshold': threshold}}
+def test_reduce_with_encoder(encoder_config, sample_dataset):
+    with patch('pipeline.dimensionality_reduction.perform_encoding') as mock_encoding:
+        mock_encoding.return_value = sample_dataset[:, :2]
+        result = reduce(encoder_config, sample_dataset)
+        mock_encoding.assert_called_once_with(encoder_config, sample_dataset)
+        assert result.shape[1] == 2
 
-    # We mostly test that it runs without error using the config value
-    # Verifying the *exact* number of components chosen is complex without
-    # replicating the internal PCA logic.
-    result = perform_pca(config, dataset)
-
-    assert isinstance(result, np.ndarray)
-    assert result.shape[0] == dataset.shape[0]
-    assert result.shape[1] <= dataset.shape[1]
-
-
-# --- Edge Case Tests ---
-
-def test_perform_pca_fewer_samples_than_features():
-    """Test with n_samples < n_features."""
-    dataset = np.random.rand(5, 20) # 5 samples, 20 features
-    config = {'reduction': {'pca_variance_threshold': 0.90}}
-
-    result = perform_pca(config, dataset)
-
-    assert isinstance(result, np.ndarray)
-    assert result.shape[0] == dataset.shape[0] # Samples preserved
-    # Max components possible is min(n_samples - 1, n_features) = min(4, 20) = 4
-    # The 'mle' solver and subsequent logic should respect this.
-    assert result.shape[1] <= 4
-    assert result.shape[1] >= 0 # Obviously true, but explicit check
-
-
-# --- Potential Error Condition Tests ---
-
-def test_perform_pca_missing_config_key():
-    """Test behavior when the required config key is missing."""
-    dataset = create_test_dataset()
-    config = {'reduction': {}} # Missing 'pca_variance_threshold' key
-
-    with pytest.raises(KeyError):
-        perform_pca(config, dataset)
-
+def test_handle_missing_invalid_approach(sample_dataset):
+    invalid_config = {'reduction': {'approach': 'invalid_approach'}}
+    with pytest.raises(ValueError, match=r"Dimensionality reduction approach can only be: pca, encoder"):
+        reduce(invalid_config, sample_dataset.copy())

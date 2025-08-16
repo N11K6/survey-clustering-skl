@@ -11,7 +11,6 @@ import yaml
 import io
 import json
 import zipfile
-from pipeline.data_load import load_excel_from_config
 from main import run_pipeline
 
 app = FastAPI(title="Clustering API")
@@ -19,17 +18,14 @@ app = FastAPI(title="Clustering API")
 @app.post("/cluster/")
 async def run_clustering(config_file: UploadFile = File(...)):
     try:
-        # 1. Parse YAML config
+        # Parse YAML config
         config_content =  await config_file.read()
         config = yaml.safe_load(config_content)
 
-        # 2. Load Excel data based on config
-        dataset = load_excel_from_config(config)
+        # Run Pipeline using config
+        dataset_clustered, metrics, fig = run_pipeline(config)
 
-        # 4. Run clustering
-        dataset_clustered, metrics, fig = run_pipeline(config, dataset)
-
-        # 5. In-memory files
+        # In-memory files
         excel_buffer = io.BytesIO()
         dataset_clustered.to_excel(excel_buffer, index=False)
         excel_buffer.seek(0)
@@ -42,7 +38,7 @@ async def run_clustering(config_file: UploadFile = File(...)):
         json_buffer.write(json.dumps(metrics, indent=2).encode())
         json_buffer.seek(0)
 
-        # 6. Create ZIP
+        # Create ZIP
         zip_buffer = io.BytesIO()
         with zipfile.ZipFile(zip_buffer, 'w') as zf:
             zf.writestr("clustered_data.xlsx", excel_buffer.read())
@@ -50,7 +46,7 @@ async def run_clustering(config_file: UploadFile = File(...)):
             zf.writestr("metrics.json", json_buffer.read())
         zip_buffer.seek(0)
 
-        # 7. Return results
+        # Return results
         return StreamingResponse(
             zip_buffer,
             media_type="application/x-zip-compressed",
