@@ -18,7 +18,7 @@ jobs:
       with:
         python-version: '3.11'
     
-    # 🔧 Cache pip dependencies
+    # Cache pip dependencies
     - name: Cache pip dependencies
       uses: actions/cache@v3
       with:
