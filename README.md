@@ -16,15 +16,46 @@ The pipeline will have to deal with these missing datapoints and process the fea
 * Ready for production
 * Supported by unit & integration tests
 
-## Components
+## Architecture
 
-* app.py
-* main.py
-* /config/
-  * config.yml
-* /pipeline/
-  * data_load.py
-  * process_missing_data.py
-  * feature_selection.py
-  * dimensionality_reduction.py
-  * clustering.py
+The architecture is modular to ensure scalability and ease of deployment, using a containerized approach with Docker:
+
+<img width="681" height="531" alt="survey_clustering_skl drawio" src="https://github.com/user-attachments/assets/9709d888-8b68-4b10-a42f-aae17b599f82" />
+
+project/ \
+├── config/ \
+│   └── config.yml # Example config stored \
+├── data/ \
+│   └── dataset.xlsx  # Example dataset stored \
+├── models/ \
+│   └── trained_model.keras # Example models stored \
+├── models_training/ \
+│   ├── train_model_synthesize.py \
+│   └── train_model_reduce.py \
+├── pipeline/ \
+│   ├── data_load.py \
+│   ├── process_missing_data.py \
+│   ├── feature_selection.py \
+│   ├── dimensionality_reduction.py \
+│   └── clustering.py \
+├── tests/ \
+│   └── test_modules.py  # Test modules to cover the pipeline \
+├── main.py \
+├── app.py \
+├── requirements.txt \
+└── Dockerfile \
+
+## Codebase:
+
+- "appmain.py" : Main script for launching fastAPI application. 
+- "main.py" : Main script for calling the pipeline. 
+- "pipeline/" :
+   - "data_load.py" : Module for loading the dataset from the specified data source.
+   - "process_missing_data.py" : Module to handle the missing data through the specified strategy.
+   - "feature_selection.py" : Module to perform feature selection based on statistics & metrics on the dataset.
+   - "dimensionality_reduction.py" : Module to perform dimensionality reduction using the specified approach.
+   - "clustering.py" : Module to perform the clustering and generate the output files.
+- "models_training/" :
+   - "train_model_synthesize.py" : Script for building and training a deep learning model for synthesizing missing data.
+   - "train_model_reduce.py" : Script for building and training a deep learning model for performing dimensionality reduction.
+
