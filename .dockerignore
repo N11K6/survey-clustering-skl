@@ -1,0 +1,13 @@
+config/
+data/
+tests/
+models_training/
+notebooks/
+*.ipynb
+.env
+.git
+.gitignore
+README.md
+.dockerignore
+__pycache__/
+*.pyc

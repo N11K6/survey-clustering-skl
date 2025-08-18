@@ -21,24 +21,17 @@ sys.path.insert(0, os.path.dirname(__file__))
 from pipeline.data_load import load_excel_from_config
 
 # --- Sample data for mocking ---
-SAMPLE_CONFIG_URL = {
-    'data_source': {
-        'type': 'url',
-        'path': 'https://example.com/data.xlsx'
-    }
-}
-
 SAMPLE_CONFIG_LOCAL = {
     'data_source': {
         'type': 'local',
-        'path': '/fake/path/to/data.xlsx'
+        'local_path': '/fake/path/to/data.xlsx'
     }
 }
 
 SAMPLE_CONFIG_S3 = {
     'data_source': {
         'type': 's3',
-        'path': 's3://my-test-bucket/path/to/data.xlsx',
+        's3_path': 's3://my-test-bucket/path/to/data.xlsx',
         's3_address': 'http://127.0.0.1:9000',
         's3_id': 'minioadmin',
         's3_key': 'minioadmin'
@@ -60,34 +53,6 @@ SAMPLE_DF = pd.DataFrame({'col1': [1, 2], 'col2': ['a', 'b']}) # Example DataFra
 
 # --- Tests ---
 
-def test_load_excel_from_url():
-    """Test loading Excel data from a URL."""
-    with patch('pipeline.data_load.requests.get') as mock_get, \
-         patch('pipeline.data_load.pd.read_excel') as mock_read_excel:
-
-        # Setup mock response
-        mock_response = MagicMock()
-        mock_response.content = SAMPLE_EXCEL_BYTES
-        mock_response.raise_for_status.return_value = None # Simulate no error
-        mock_get.return_value = mock_response
-
-        # Setup mock read_excel to return a sample DataFrame
-        mock_read_excel.return_value = SAMPLE_DF
-
-        # Call the function
-        result_df = load_excel_from_config(SAMPLE_CONFIG_URL)
-
-        # Assertions
-        mock_get.assert_called_once_with(SAMPLE_CONFIG_URL['data_source']['path'])
-        mock_response.raise_for_status.assert_called_once()
-        # Check pd.read_excel was called with BytesIO containing the content
-        mock_read_excel.assert_called_once()
-        # The argument should be the BytesIO object. We can check the first call's args.
-        args, kwargs = mock_read_excel.call_args
-        assert isinstance(args[0], BytesIO)
-        assert args[0].getvalue() == SAMPLE_EXCEL_BYTES
-        pd.testing.assert_frame_equal(result_df, SAMPLE_DF)
-
 def test_load_excel_from_local():
     """Test loading Excel data from a local file."""
     with patch('pipeline.data_load.pd.read_excel') as mock_read_excel:
@@ -98,7 +63,7 @@ def test_load_excel_from_local():
         result_df = load_excel_from_config(SAMPLE_CONFIG_LOCAL)
 
         # Assertions
-        mock_read_excel.assert_called_once_with(SAMPLE_CONFIG_LOCAL['data_source']['path'])
+        mock_read_excel.assert_called_once_with(SAMPLE_CONFIG_LOCAL['data_source']['local_path'])
         pd.testing.assert_frame_equal(result_df, SAMPLE_DF)
 
 def test_load_excel_from_s3():
@@ -148,12 +113,3 @@ def test_load_excel_unsupported_type():
 
     assert f"Unsupported data source type: {SAMPLE_CONFIG_UNSUPPORTED['data_source']['type']}" in str(exc_info.value)
 
-# Example for testing URL error:
-def test_load_excel_from_url_request_failure():
-    """Test handling of request failure for URL source."""
-    with patch('pipeline.data_load.requests.get') as mock_get:
-        # Simulate requests.get raising an exception
-        mock_get.side_effect = requests.ConnectionError("Network error")
-
-        with pytest.raises(requests.ConnectionError):
-            load_excel_from_config(SAMPLE_CONFIG_URL)

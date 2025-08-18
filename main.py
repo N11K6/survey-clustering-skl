@@ -20,9 +20,10 @@ def run_pipeline(config: dict):
     return dataset_clustered, metrics_dict, cluster_plot
 
 if __name__ == "__main__":
-    config_path = os.path.join('config', 'config.yml')
+    config_path = os.path.abspath('config/config.yml')
     with open(config_path, 'r') as file:
         config = yaml.safe_load(file)
+    config['data_source']['type'] = 'local'
     dataset_clustered, metrics_dict, cluster_plot = run_pipeline(config)
     cluster_plot.show()
     

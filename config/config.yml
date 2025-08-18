@@ -1,11 +1,9 @@
 data_source:
-    # type can be 'local', 'url', 's3'
-    type: "local"
-    # should be full path to file for given source
-    path: "data/dataset.xlsx"
-    # path: "s3://test-bucket/dataset.xlsx"
-    # for s3, additional info is necessary
-    s3_address: "http://127.0.0.1:9000"
+    # type can be 'local' for local tests, 's3' for deployment
+    type: "s3"
+    local_path: "data/dataset.xlsx"
+    s3_path: "s3://test-bucket/dataset.xlsx"
+    s3_address: "http://minio:9000"
     s3_id: "minioadmin"
     s3_key: "minioadmin"
 missing_data:
@@ -14,7 +12,7 @@ missing_data:
     # fill value in case of 'fill'    
     fill_value: 0
     # name of model for data synthesis
-    model_name: "model_synthesize2"
+    model_name: "model_synthesize"
 feature_selection:
     # toggle variance check
     variance_check: 1
