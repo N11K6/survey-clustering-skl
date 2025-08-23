@@ -1,8 +1,8 @@
 config/
 data/
-tests/
+models/
 models_training/
-notebooks/
+tests/
 *.ipynb
 .env
 .git

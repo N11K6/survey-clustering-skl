@@ -45,6 +45,9 @@ def pca_config():
 @pytest.fixture
 def encoder_config():
     return {
+        'data_source': {
+            'type': 'local',
+            },
         'reduction': {
             'approach': 'encoder',
             'model_name': 'test_encoder'

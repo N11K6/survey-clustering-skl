@@ -1,9 +1,11 @@
 data_source:
     # type can be 'local' for local tests, 's3' for deployment
     type: "s3"
-    local_path: "data/dataset.xlsx"
-    s3_path: "s3://test-bucket/dataset.xlsx"
-    s3_address: "http://minio:9000"
+    filename: "dataset.xlsx"
+    s3_path: "s3://test-bucket/"
+    # 'localhost' for local testing
+    # 'minio' for Docker deployment
+    s3_address: "http://localhost:9000"
     s3_id: "minioadmin"
     s3_key: "minioadmin"
 missing_data:
@@ -12,7 +14,7 @@ missing_data:
     # fill value in case of 'fill'    
     fill_value: 0
     # name of model for data synthesis
-    model_name: "model_synthesize"
+    model_name: "model_synthesize.keras"
 feature_selection:
     # toggle variance check
     variance_check: 1
@@ -26,7 +28,7 @@ reduction:
     # set cummulative variance threshold for pca
     pca_variance_threshold: 0.25
     # name of encoder model for dimensionality reduction
-    model_name: "model_reduce"
+    model_name: "model_reduce.keras"
 clustering:
     # set minimum cluster size
     min_cluster_size: 40

@@ -11,30 +11,35 @@ from io import BytesIO
 import boto3
 from botocore.config import Config
 
+def connect_to_s3(source: dict):
+    # Use environment variables with fallback to config
+    minio_endpoint = os.getenv('MINIO_ENDPOINT', source.get("s3_address"))
+    access_key = os.getenv('MINIO_ACCESS_KEY', source.get("s3_id", "minioadmin"))
+    secret_key = os.getenv('MINIO_SECRET_KEY', source.get("s3_key", "minioadmin"))
+    
+    # Create S3 client configured for MinIO
+    s3 = boto3.client(
+        's3',
+        endpoint_url=minio_endpoint,
+        aws_access_key_id=access_key,
+        aws_secret_access_key=secret_key,
+        config=Config(signature_version='s3v4')
+        )
+    
+    return s3
+
 def load_excel_from_config(config: dict) -> pd.DataFrame:
     source = config['data_source']
     source_type = source['type']
 
     if source_type == "local":
-        path = source['local_path']
-        return pd.read_excel(path)
+        filename = source['filename']
+        return pd.read_excel(os.path.join('data',filename))
 
     elif source_type == "s3":  # Pointing to MinIO for s3 storage
         # Use environment variables with fallback to config
-        path = source['s3_path']
-        minio_endpoint = os.getenv('MINIO_ENDPOINT', source.get("s3_address"))
-        access_key = os.getenv('MINIO_ACCESS_KEY', source.get("s3_id", "minioadmin"))
-        secret_key = os.getenv('MINIO_SECRET_KEY', source.get("s3_key", "minioadmin"))
-        
-        # Create S3 client configured for MinIO
-        s3 = boto3.client(
-            's3',
-            endpoint_url=minio_endpoint,
-            aws_access_key_id=access_key,
-            aws_secret_access_key=secret_key,
-            config=Config(signature_version='s3v4')
-        )
-        
+        path = os.path.join(source['s3_path'],source['filename'])
+        s3 = connect_to_s3(source)        
         # Parsing path
         bucket, key = path.replace("s3://", "").split("/", 1)
     

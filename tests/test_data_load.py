@@ -6,7 +6,6 @@ Created on Sun Aug 10 15:16:37 2025
 @author: nk
 """
 import pytest
-import requests
 import pandas as pd
 from io import BytesIO
 from unittest.mock import patch, MagicMock, ANY
@@ -24,14 +23,15 @@ from pipeline.data_load import load_excel_from_config
 SAMPLE_CONFIG_LOCAL = {
     'data_source': {
         'type': 'local',
-        'local_path': '/fake/path/to/data.xlsx'
+        'filename': 'data.xlsx'
     }
 }
 
 SAMPLE_CONFIG_S3 = {
     'data_source': {
         'type': 's3',
-        's3_path': 's3://my-test-bucket/path/to/data.xlsx',
+        'filename': 'data.xlsx',
+        's3_path': 's3://my-test-bucket/path/to/',
         's3_address': 'http://127.0.0.1:9000',
         's3_id': 'minioadmin',
         's3_key': 'minioadmin'
@@ -41,6 +41,7 @@ SAMPLE_CONFIG_S3 = {
 SAMPLE_CONFIG_UNSUPPORTED = {
     'data_source': {
         'type': 'unsupported_type',
+        'filename': 'some_file.xlsx',
         'path': 'some_path'
     }
 }
@@ -61,9 +62,9 @@ def test_load_excel_from_local():
 
         # Call the function
         result_df = load_excel_from_config(SAMPLE_CONFIG_LOCAL)
-
+        
         # Assertions
-        mock_read_excel.assert_called_once_with(SAMPLE_CONFIG_LOCAL['data_source']['local_path'])
+        mock_read_excel.assert_called_once_with(os.path.join('data',SAMPLE_CONFIG_LOCAL['data_source']['filename']))
         pd.testing.assert_frame_equal(result_df, SAMPLE_DF)
 
 def test_load_excel_from_s3():
