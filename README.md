@@ -59,6 +59,11 @@ project/ \
 
 ## Parameters
 Parameters for the pipeline are defined in the "config.yml", which is the only input file the user has to submit to the app.
+
+*Example config file:* 
+
+<img width="555" height="584" alt="config" src="https://github.com/user-attachments/assets/fbffbd0a-1b1c-416c-9001-8273d49c515a" />
+
 #### Data Source
 Data source can be:
 * *local* : This will use the locally stored dataset and trained models (if configured to use trained models for the processing).
@@ -94,4 +99,22 @@ The user may specify a number according to the size of the dataset analyzed.
 - *models_training/* :
    - **train_model_synthesize.py** : Script for building and training a deep learning model for synthesizing missing data.
    - **train_model_reduce.py** : Script for building and training a deep learning model for performing dimensionality reduction.
+- `Dockerfile` : Dockerfile to run container for the main application.
+- `docker-compose.yml` : Docker compose file with instructions to run the Docker container for the application, as well as the MinIO storage.
 
+## Running the Pipeline
+
+* Clone the repository to local machine, and enter the command to build the Docker container for the app and the MinIO using docker compose: `docker-compose up`
+* Once the Docker containers are up and running:
+   * Port `:9000` is used by MinIO where dataset and trained model files can be uploaded.
+   * If the data source "type" field in the `config.yml` file is "local" instead of "s3", the pipeline will read the dataset and trained models from the local `data/` and `models/` folders.
+   * Port `:8000` is used by the FastAPI UI. The pipeline can run from there by uploading the configuration file.
+* Once the pipeline runs, the outputs are available for download in a .zip file.
+
+
+
+* The pipeline can also run locally without Docker containerization:
+   * Ensure the dependencies listed in `requirements.txt` are installed locally.
+   * If "s3" data source is used, MinIO must be running locally.
+   * Run the fastAPI directly from command line via: `uvicorn appmain:app --reload`
+   * Access port `':8000` as before to upload the `config.yml` file and run he pipeline.
